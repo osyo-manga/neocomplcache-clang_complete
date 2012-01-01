@@ -44,7 +44,7 @@ function! s:complete_dot()
 endfunction
 
 function! s:complete_arrow()
-  if !g:clang_complete_auto || s:get_cur_text() =~ '-$'
+  if !g:clang_complete_auto || s:get_cur_text() !~ '-$'
     return '>'
   endif
 
@@ -52,7 +52,7 @@ function! s:complete_arrow()
 endfunction
 
 function! s:complete_colon()
-  if !g:clang_complete_auto || s:get_cur_text() =~ ':$'
+  if !g:clang_complete_auto || s:get_cur_text() !~ ':$'
     return ':'
   endif
 
