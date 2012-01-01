@@ -44,9 +44,7 @@ function! s:complete_dot()
 endfunction
 
 function! s:complete_arrow()
-  let char = get(getline('.'), col('.') - 2, '')
-
-  if !g:clang_complete_auto || char != '-'
+  if !g:clang_complete_auto || s:get_cur_text() =~ '-$'
     return '>'
   endif
 
@@ -54,9 +52,7 @@ function! s:complete_arrow()
 endfunction
 
 function! s:complete_colon()
-  let char = get(getline('.'), col('.') - 2, '')
-
-  if !g:clang_complete_auto || char != ':'
+  if !g:clang_complete_auto || s:get_cur_text() =~ ':$'
     return ':'
   endif
 
@@ -69,6 +65,11 @@ function! s:init_clang_complete()
     inoremap <expr> <buffer> > <SID>complete_arrow()
     inoremap <expr> <buffer> : <SID>complete_colon()
   endif
+endfunction
+
+function! s:get_cur_text()
+  return matchstr(getline('.'),
+        \ '^.*\%' . col('.') . 'c' . (mode() ==# 'i' ? '' : '.'))
 endfunction
 
 autocmd InsertEnter <buffer> call s:init_clang_complete()
