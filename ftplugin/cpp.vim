@@ -1,64 +1,79 @@
+let s:save_cpo = &cpo
+set cpo&vim
 
-function! s:ShouldComplete()
-  if (getline('.') =~ '#\s*\(include\|import\)')
+function! s:should_complete()
+  if getline('.') =~ '\<#\s*\%(include\|import\)'
     return 0
-  else
-    if col('.') == 1
-      return 1
-    endif
-    for l:id in synstack(line('.'), col('.') - 1)
-      if match(synIDattr(l:id, 'name'), '\CComment\|String\|Number')
-            \ != -1
-        return 0
-      endif
-    endfor
+  endif
+
+  if col('.') == 1
     return 1
   endif
+
+  for id in synstack(line('.'), col('.') - 1)
+    if synIDattr(id, 'name') =~ '\CComment\|String\|Number'
+      return 0
+    endif
+  endfor
+
+  return 1
 endfunction
 
-function! s:LaunchCompletion()
-  let l:result = ""
-  if s:ShouldComplete()
-    let l:result = "\<C-X>\<C-O>"
+function! s:launch_completion()
+  let result = ''
+
+  if s:should_complete()
+    let result = "\<C-x>\<C-o>"
     if g:clang_auto_select != 2
-      let l:result .= "\<C-P>"
+      let result .= "\<C-p>"
     endif
     if g:clang_auto_select == 1
-      let l:result .= "\<C-R>=(pumvisible() ? \"\\<Down>\" : '')\<CR>"
+      let result .= "\<C-r>=(pumvisible() ? \"\\<Down>\" : '')\<CR>"
     endif
   endif
-  return l:result
+
+  return result
 endfunction
 
-function! s:CompleteDot()
-  if g:clang_complete_auto == 1
-    return '.' . s:LaunchCompletion()
+function! s:complete_dot()
+  if g:clang_complete_auto
+    return '.' . s:launch_completion()
   endif
+
   return '.'
 endfunction
 
-function! s:CompleteArrow()
-  if g:clang_complete_auto != 1 || getline('.')[col('.') - 2] != '-'
+function! s:complete_arrow()
+  let char = get(getline('.'), col('.') - 2, '')
+
+  if !g:clang_complete_auto || char != '-'
     return '>'
   endif
-  return '>' . s:LaunchCompletion()
+
+  return '>' . s:launch_completion()
 endfunction
 
-function! s:CompleteColon()
-  if g:clang_complete_auto != 1 || getline('.')[col('.') - 2] != ':'
+function! s:complete_colon()
+  let char = get(getline('.'), col('.') - 2, '')
+
+  if !g:clang_complete_auto || char != ':'
     return ':'
   endif
-  return ':' . s:LaunchCompletion()
+
+  return ':' . s:launch_completion()
 endfunction
 
 function! s:init_clang_complete()
-	if exists("g:clang_complete_auto") && g:clang_complete_auto
-		inoremap <expr> <buffer> . <SID>CompleteDot()
-		inoremap <expr> <buffer> > <SID>CompleteArrow()
-		inoremap <expr> <buffer> : <SID>CompleteColon()
-	endif
+  if exists('g:clang_complete_auto') && g:clang_complete_auto
+    inoremap <expr> <buffer> . <SID>complete_dot()
+    inoremap <expr> <buffer> > <SID>complete_arrow()
+    inoremap <expr> <buffer> : <SID>complete_colon()
+  endif
 endfunction
+
 autocmd InsertEnter <buffer> call s:init_clang_complete()
 
+let &cpo = s:save_cpo
+unlet s:save_cpo
 
-
+" vim: sw=2 sts=2
